@@ -1,22 +1,33 @@
 FILEFLOW DEPLOYMENT GUIDE
 
-A) Website preview
-- Open index.html in a web browser. This is a standalone front-end preview/demo.
-- It stores demo data in memory only; refreshing the page resets the demo.
-
-B) Python app locally
-- Install Python 3.10+
-- Open terminal in this folder
+1) Local Development
 - Run: pip install -r requirements.txt
 - Run: streamlit run app.py
+- View: http://localhost:8501
 
-C) Deploy Python app for a public URL
-- Create a GitHub repository you control.
-- Upload app.py, requirements.txt, README.md, and optionally index.html.
-- Visit https://share.streamlit.io and sign in with GitHub.
-- Click Create app, choose your repository, branch main, and main file app.py.
-- Click Deploy and copy the generated streamlit.app URL.
+2) Deploy to Render (Free Cloud Hosting)
+Method A (Automated Blueprint):
+- Visit https://dashboard.render.com
+- Click "New +" -> "Blueprint"
+- Connect your GitHub repository: tejalselokar25/Experiential-Learning-Python
+- Render will detect render.yaml and auto-configure all settings.
+- Click "Apply" to deploy.
 
-IMPORTANT
-The HTML file is a front-end demo; the Python/Streamlit app is the deployable Python project. They are separate implementations and do not sync data with one another.
-A public URL cannot be generated until the app is deployed from your GitHub/Streamlit account.
+Method B (Manual Web Service):
+- Visit https://dashboard.render.com
+- Click "New +" -> "Web Service"
+- Connect repo: tejalselokar25/Experiential-Learning-Python
+- Root Directory: FileFlow
+- Runtime: Python 3
+- Build Command: pip install --upgrade pip && pip install -r requirements.txt
+- Start Command: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+- Plan: Free
+- Click "Create Web Service"
+
+3) Deploy to Streamlit Community Cloud
+- Direct 1-Click Link: https://share.streamlit.io/deploy?repository=tejalselokar25/Experiential-Learning-Python&branch=main&main_module=FileFlow/app.py
+- Sign in with GitHub and click Deploy.
+
+4) Deploy to GitHub Pages (Static Preview)
+- Open https://github.com/tejalselokar25/Experiential-Learning-Python/settings/pages
+- Under Branch, select main and /(root), then Save.
