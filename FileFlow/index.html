@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FileFlow — Enterprise Cloud Drive Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #142B4D;
+      --primary-dark: #0F1E36;
+      --secondary: #3478D4;
+      --secondary-hover: #2365BF;
+      --secondary-light: #EBF3FC;
+      --bg: #F5F7FB;
+      --cards: #FFFFFF;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --borders: #E5EAF1;
+      --success: #10B981;
+      --success-bg: #ECFDF5;
+      --warning: #F59E0B;
+      --warning-bg: #FFFBEB;
+      --danger: #EF4444;
+      --danger-bg: #FEF2F2;
+      --sidebar-w: 260px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(20, 43, 77, 0.04), 0 2px 6px rgba(20, 43, 77, 0.02);
+      --shadow-md: 0 4px 16px rgba(20, 43, 77, 0.06), 0 1px 3px rgba(20, 43, 77, 0.03);
+      --shadow-lg: 0 12px 36px rgba(20, 43, 77, 0.12), 0 2px 8px rgba(20, 43, 77, 0.04);
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* APP LAYOUT */
+    .app-sidebar {
+      width: var(--sidebar-w);
+      background: var(--primary);
+      color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      transition: var(--transition);
+    }
+
+    .app-main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 28px 36px 48px;
+      max-width: calc(100vw - var(--sidebar-w));
+      transition: var(--transition);
+    }
+
+    /* BRAND LOGO */
+    .brand {
+      padding: 24px 22px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--secondary), #1A4D94);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 14px rgba(52, 120, 212, 0.4);
+    }
+    .brand-info h1 {
+      font-size: 1.22rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      line-height: 1.1;
+    }
+    .brand-info span {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #8FAEDB;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ACTION BUTTONS */
+    .sidebar-actions {
+      padding: 18px 16px 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-action {
+      border: 0;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .btn-action-primary {
+      background: var(--secondary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(52, 120, 212, 0.35);
+    }
+    .btn-action-primary:hover {
+      background: var(--secondary-hover);
+      transform: translateY(-1px);
+    }
+    .btn-action-ghost {
+      background: rgba(255, 255, 255, 0.08);
+      color: #F1F5F9;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-action-ghost:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+
+    /* NAV MENU */
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      color: #94A3B8;
+      font-size: 0.90rem;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      position: relative;
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #FFFFFF;
+    }
+    .nav-item.active {
+      background: var(--secondary);
+      color: #FFFFFF;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(52, 120, 212, 0.3);
+    }
+    .nav-badge {
+      margin-left: auto;
+      background: rgba(255, 255, 255, 0.2);
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    /* STORAGE & PROFILE */
+    .sidebar-footer {
+      padding: 18px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .storage-widget {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+    .storage-hdr {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #CBD5E1;
+      margin-bottom: 8px;
+    }
+    .storage-progress {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .storage-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3478D4, #60A5FA);
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
+    .storage-sub {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.70rem;
+      color: #8FAEDB;
+      margin-top: 6px;
+    }
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px;
+    }
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      background: #245BA7;
+      border: 2px solid var(--secondary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: white;
+    }
+    .user-meta h4 {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: white;
+      line-height: 1.1;
+    }
+    .user-meta p {
+      font-size: 0.72rem;
+      color: #10B981;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 2px;
+    }
+    .user-meta p span {
+      width: 6px;
+      height: 6px;
+      background: #10B981;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* TOP BAR / MOBILE */
+    .topbar {
+      display: none;
+      background: var(--primary);
+      color: white;
+      padding: 12px 18px;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+    .menu-toggle {
+      background: transparent;
+      border: 0;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    /* HERO BANNER */
+    .ff-hero {
+      background: linear-gradient(135deg, #142B4D 0%, #1A3966 60%, #245BA7 100%);
+      border-radius: var(--radius-lg);
+      padding: 30px 36px;
+      color: #FFFFFF;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .ff-hero::after {
+      content: "";
+      position: absolute;
+      top: -60px;
+      right: -40px;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(52, 120, 212, 0.3) 0%, rgba(20, 43, 77, 0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .ff-hero-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9FC6FF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .ff-hero-eyebrow span.pulse {
+      width: 8px;
+      height: 8px;
+      background: #10B981;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 8px #10B981;
+    }
+    .ff-hero-title {
+      font-size: 2.1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+      margin-bottom: 8px;
+    }
+    .ff-hero-desc {
+      font-size: 0.95rem;
+      color: #D6E4FA;
+      max-width: 640px;
+      line-height: 1.5;
+    }
+
+    /* STATS CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--cards);
+      border: 1px solid var(--borders);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: #D3DEEC;
+    }
+    .stat-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .stat-blue { background: #EBF3FC; color: #3478D4; }
+    .stat-navy { background: #EAEFF7; color: #142B4D; }
+    .stat-emerald { background: #ECFDF5; color: #10B981; }
+    .stat-amber { background: #FFFBEB; color: #F59E0B; }
+    .stat-meta .stat-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .stat-meta .stat-val {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.1;
+    }
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #10B981;
+      background: #ECFDF5;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-top: 4px;
+    }
+
+    /* CARD CONTAINERS */
+    .ff-card {
+      background: var(--cards);
+      border: 1px solid var(--borders);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      margin-bottom: 24px;
+    }
+    .ff-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: #D3DEEC;
+    }
+    .card-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.01em;
+    }
+
+    /* BREADCRUMBS */
+    .breadcrumb-bar {
+      background: var(--cards);
+      border: 1px solid var(--borders);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+      flex-wrap: wrap;
+    }
+    .crumb-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--secondary);
+      font-size: 0.90rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .crumb-item:hover {
+      color: var(--secondary-hover);
+      text-decoration: underline;
+    }
+    .crumb-item.current {
+      color: var(--primary);
+      font-weight: 700;
+      cursor: default;
+      text-decoration: none;
+    }
+    .crumb-sep {
+      color: #94A3B8;
+      font-size: 0.85rem;
+    }
+
+    /* EXPLORER TOOLBAR */
+    .explorer-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .dir-heading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .dir-heading h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .dir-path-pill {
+      background: var(--secondary-light);
+      color: var(--secondary);
+      font-size: 0.80rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .view-switch {
+      display: flex;
+      background: #E5EAF1;
+      padding: 3px;
+      border-radius: var(--radius-sm);
+      gap: 2px;
+    }
+    .view-btn {
+      border: 0;
+      background: transparent;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .view-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* EXPLORER LAYOUT SPLIT */
+    .explorer-split {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 24px;
+    }
+
+    /* FILE & FOLDER GRID */
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .grid-card {
+      background: var(--cards);
+      border: 1px solid var(--borders);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      transition: var(--transition);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 120px;
+      position: relative;
+    }
+    .grid-card:hover {
+      border-color: var(--secondary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .grid-card.active {
+      border: 2px solid var(--secondary);
+      background: #F9FBFE;
+    }
+    .grid-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .grid-card-icon {
+      font-size: 28px;
+    }
+    .grid-card-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--primary);
+      word-break: break-all;
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+    .grid-card-sub {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+    .grid-card-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid #F1F5F9;
+    }
+    .grid-btn-sm {
+      flex: 1;
+      padding: 5px 8px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      border: 1px solid var(--borders);
+      background: #F8FAFD;
+      color: var(--text);
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition);
+    }
+    .grid-btn-sm:hover {
+      background: var(--secondary-light);
+      color: var(--secondary);
+      border-color: var(--secondary);
+    }
+    .grid-btn-sm.primary {
+      background: var(--secondary);
+      color: white;
+      border-color: var(--secondary);
+    }
+    .grid-btn-sm.primary:hover {
+      background: var(--secondary-hover);
+    }
+
+    /* LIST VIEW */
+    .items-list {
+      background: white;
+      border: 1px solid var(--borders);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .list-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 120px;
+      padding: 12px 18px;
+      align-items: center;
+      border-bottom: 1px solid #EDF2F7;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .list-row:last-child { border-bottom: 0; }
+    .list-row:hover { background: #F8FAFD; }
+    .list-row.active { background: #EBF3FC; }
+    .list-col-name {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      font-size: 0.90rem;
+    }
+
+    /* BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+    .badge-folder { background: #EBF3FC; color: #2B6CB0; }
+    .badge-doc { background: #F1F5F9; color: #475569; }
+    .badge-code { background: #ECFDF5; color: #047857; }
+    .badge-data { background: #FFFBEB; color: #B45309; }
+    .badge-danger { background: #FEF2F2; color: #DC2626; }
+
+    /* ITEM INSPECTOR */
+    .inspector-panel {
+      background: var(--cards);
+      border: 1px solid var(--borders);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 24px;
+    }
+    .inspector-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .inspector-icon {
+      font-size: 32px;
+    }
+    .inspector-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      word-break: break-all;
+    }
+    .meta-box {
+      background: #F8FAFD;
+      border: 1px solid var(--borders);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      margin-bottom: 6px;
+    }
+    .meta-row:last-child { margin-bottom: 0; }
+    .meta-lbl { color: var(--text-muted); font-weight: 500; }
+    .meta-val { color: var(--primary); font-weight: 700; word-break: break-all; }
+    .code-editor-preview {
+      background: #0F172A;
+      color: #E2E8F0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.83rem;
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      max-height: 260px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      margin-bottom: 18px;
+      border: 1px solid #1E293B;
+      line-height: 1.5;
+    }
+    .inspector-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    /* EMPTY STATES */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      background: white;
+      border: 1px dashed #CBD5E1;
+      border-radius: var(--radius-md);
+    }
+    .empty-icon {
+      font-size: 42px;
+      margin-bottom: 12px;
+    }
+    .empty-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+    .empty-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      max-width: 400px;
+      margin: 0 auto 16px;
+    }
+
+    /* MODAL DIALOGS */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition);
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-box {
+      background: white;
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 520px;
+      padding: 26px;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(20px);
+      transition: var(--transition);
+    }
+    .modal-overlay.open .modal-box {
+      transform: translateY(0);
+    }
+    .modal-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-hdr h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .modal-close {
+      background: transparent;
+      border: 0;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid #D1D9E4;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.90rem;
+      color: var(--text);
+      background: white;
+      transition: var(--transition);
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: 0;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(52, 120, 212, 0.15);
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .btn {
+      padding: 10px 18px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: 0;
+      transition: var(--transition);
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-secondary {
+      background: #F1F5F9;
+      color: #334155;
+    }
+    .btn-secondary:hover { background: #E2E8F0; }
+    .btn-primary {
+      background: var(--secondary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(52, 120, 212, 0.35);
+    }
+    .btn-primary:hover { background: var(--secondary-hover); }
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover { background: #DC2626; }
+
+    /* TOAST NOTIFICATION */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: #142B4D;
+      color: white;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.90rem;
+      font-weight: 600;
+      animation: slideIn 0.25s ease-out;
+      border-left: 4px solid var(--secondary);
+    }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* RESPONSIVE DESIGN */
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .explorer-split { grid-template-columns: 1fr; }
+      .inspector-panel { position: static; }
+    }
+    @media (max-width: 768px) {
+      .app-sidebar {
+        transform: translateX(-100%);
+      }
+      .app-sidebar.open {
+        transform: translateX(0);
+      }
+      .app-main {
+        margin-left: 0;
+        max-width: 100vw;
+        padding: 20px 16px;
+      }
+      .topbar { display: flex; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .list-row { grid-template-columns: 1fr 100px; }
+      .list-row .list-hide-mobile { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MOBILE TOP BAR -->
+  <header class="topbar">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <strong style="font-size: 1.1rem;">FileFlow</strong>
+    </div>
+    <span class="badge badge-code">Cloud Active</span>
+  </header>
+
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="app-sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon">📁</div>
+      <div class="brand-info">
+        <h1>FileFlow</h1>
+        <span>Cloud Workspace</span>
+      </div>
+    </div>
+
+    <div class="sidebar-actions">
+      <button class="btn-action btn-action-ghost" id="sbNewFolderBtn">+ Folder</button>
+      <button class="btn-action btn-action-primary" id="sbNewFileBtn">+ File</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item active" data-view="dashboard">
+        <span>📊</span> Dashboard
+      </a>
+      <a class="nav-item" data-view="explorer">
+        <span>📁</span> My Files
+      </a>
+      <a class="nav-item" data-view="recent">
+        <span>🕒</span> Recent Files
+      </a>
+      <a class="nav-item" data-view="tree">
+        <span>🗂️</span> Folders Tree
+      </a>
+      <a class="nav-item" data-view="search">
+        <span>🔍</span> Search Index
+      </a>
+      <a class="nav-item" data-view="trash">
+        <span>🗑️</span> Trash
+        <span class="nav-badge" id="trashBadge" style="display:none;">0</span>
+      </a>
+      <a class="nav-item" data-view="settings">
+        <span>⚙️</span> Settings & Export
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="storage-widget">
+        <div class="storage-hdr">
+          <span>Storage Overview</span>
+          <span id="storageUsedText">0 KB</span>
+        </div>
+        <div class="storage-progress">
+          <div class="storage-bar" id="storageProgressBar" style="width: 2%;"></div>
+        </div>
+        <div class="storage-sub">
+          <span>Quota</span>
+          <span>100 MB Max</span>
+        </div>
+      </div>
+
+      <div class="user-profile">
+        <div class="user-avatar">AM</div>
+        <div class="user-meta">
+          <h4>Alex Morgan</h4>
+          <p><span></span> Workspace Admin</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN APP CONTENT -->
+  <main class="app-main">
+
+    <!-- VIEW 1: DASHBOARD -->
+    <section id="view-dashboard">
+      <div class="ff-hero">
+        <div class="ff-hero-eyebrow"><span class="pulse"></span> Cloud Directory Active · Enterprise v2.4</div>
+        <h1 class="ff-hero-title">Welcome back, Alex!</h1>
+        <p class="ff-hero-desc">Manage files and nested folder hierarchies with enterprise-grade simulated cloud storage, live breadcrumbs, and JSON directory schemas.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon stat-blue">📄</div>
+          <div class="stat-meta">
+            <div class="stat-label">Total Files</div>
+            <div class="stat-val" id="statFiles">0</div>
+            <div class="stat-badge">Synced Live</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-navy">📁</div>
+          <div class="stat-meta">
+            <div class="stat-label">Total Folders</div>
+            <div class="stat-val" id="statFolders">0</div>
+            <div class="stat-badge">Hierarchical Tree</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-emerald">💾</div>
+          <div class="stat-meta">
+            <div class="stat-label">Storage Consumed</div>
+            <div class="stat-val" id="statStorage">0 KB</div>
+            <div class="stat-badge">In-Memory Node Registry</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-amber">⚡</div>
+          <div class="stat-meta">
+            <div class="stat-label">System Health</div>
+            <div class="stat-val" style="color: var(--success); font-size:1.3rem;">100% Ready</div>
+            <div class="stat-badge">Zero Latency</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px;">
+        <div class="ff-card">
+          <div class="card-hdr">
+            <h3 class="card-title">Recent Files</h3>
+            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="switchView('recent')">View All</button>
+          </div>
+          <div id="dashRecentList"></div>
+        </div>
+
+        <div class="ff-card">
+          <div class="card-hdr">
+            <h3 class="card-title">Storage Allocation</h3>
+          </div>
+          <div id="storageDistributionList"></div>
+          <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--borders); font-size: 0.82rem; color: var(--text-muted);">
+            💡 <strong>Quick Action:</strong> Ready to backup your simulated file structure? Export as a JSON package in Settings.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: EXPLORER (MY FILES) -->
+    <section id="view-explorer" style="display: none;">
+      <div class="breadcrumb-bar" id="breadcrumbBar"></div>
+
+      <div class="explorer-toolbar">
+        <div class="dir-heading">
+          <h2 id="currentDirName">Root</h2>
+          <span class="dir-path-pill" id="currentDirPath">/</span>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn btn-secondary" id="btnGoUp" title="Go to parent folder">⬆ Up</button>
+          <button class="btn btn-secondary" id="btnExpNewFolder">+ Folder</button>
+          <button class="btn btn-primary" id="btnExpNewFile">+ File</button>
+          <div class="view-switch">
+            <button class="view-btn active" id="viewModeGrid" onclick="setViewMode('grid')">Grid</button>
+            <button class="view-btn" id="viewModeList" onclick="setViewMode('list')">List</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="explorer-split">
+        <div>
+          <div id="foldersSection">
+            <div class="section-title">Folders</div>
+            <div class="items-grid" id="foldersContainer"></div>
+          </div>
+
+          <div id="filesSection">
+            <div class="section-title">Files</div>
+            <div class="items-grid" id="filesContainer"></div>
+          </div>
+
+          <div id="emptyDirState" class="empty-state" style="display: none;">
+            <div class="empty-icon">📂</div>
+            <div class="empty-title">This folder is empty</div>
+            <div class="empty-desc">Create your first subfolder or text document using the buttons above.</div>
+          </div>
+        </div>
+
+        <!-- ITEM INSPECTOR PANEL -->
+        <div>
+          <div class="inspector-panel" id="inspectorPanel">
+            <div class="empty-state" style="border: 0; padding: 20px 0;">
+              <div class="empty-icon">🔍</div>
+              <div class="empty-title">Select an item</div>
+              <div class="empty-desc">Click on any file or folder to inspect metadata and content.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: RECENT FILES -->
+    <section id="view-recent" style="display: none;">
+      <div class="ff-card">
+        <div class="card-hdr">
+          <div>
+            <h2 class="card-title" style="font-size: 1.35rem;">Recent Files Activity</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Chronological timeline of all files saved across your workspace.</p>
+          </div>
+        </div>
+        <div id="recentFilesFullList"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: FOLDERS TREE -->
+    <section id="view-tree" style="display: none;">
+      <div class="ff-card">
+        <div class="card-hdr">
+          <div>
+            <h2 class="card-title" style="font-size: 1.35rem;">Directory Tree Visualizer</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Explore hierarchical directory structure and branches.</p>
+          </div>
+        </div>
+        <div id="treeContainer" style="padding: 10px 0;"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: SEARCH -->
+    <section id="view-search" style="display: none;">
+      <div class="ff-card">
+        <h2 class="card-title" style="font-size: 1.35rem; margin-bottom: 6px;">Search Directory Index</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 18px;">Find items by name, parent folder, or text contained within files.</p>
+        
+        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+          <input type="text" id="searchInput" class="form-input" placeholder="Type keyword (e.g. Welcome, ideas, /Documents)..." style="font-size: 1rem;">
+          <select id="searchTypeFilter" class="form-select" style="max-width: 160px;">
+            <option value="all">All Items</option>
+            <option value="file">Files Only</option>
+            <option value="folder">Folders Only</option>
+          </select>
+        </div>
+
+        <div id="searchResultsContainer"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 6: TRASH -->
+    <section id="view-trash" style="display: none;">
+      <div class="ff-card">
+        <div class="card-hdr">
+          <div>
+            <h2 class="card-title" style="font-size: 1.35rem;">Trash & Recovery Bin</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Soft-deleted items are safely preserved here and can be restored anytime.</p>
+          </div>
+          <button class="btn btn-danger" id="btnEmptyTrash">Purge All Items</button>
+        </div>
+        <div id="trashContainer"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 7: SETTINGS & EXPORT -->
+    <section id="view-settings" style="display: none;">
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px;">
+        <div class="ff-card">
+          <h2 class="card-title" style="font-size: 1.35rem; margin-bottom: 8px;">Backup & JSON Export</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 18px;">Download your entire virtual file directory schema as a structured JSON file.</p>
+          <button class="btn btn-primary" id="btnExportJSON">⬇️ Download Directory JSON</button>
+
+          <hr style="border: 0; border-top: 1px solid var(--borders); margin: 24px 0;">
+
+          <h3 class="card-title" style="font-size: 1.1rem; margin-bottom: 8px;">Restore Directory Schema</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Paste valid FileFlow exported JSON schema below to restore the hierarchy.</p>
+          <textarea id="importJsonText" class="form-textarea" rows="4" placeholder="Paste schema JSON here..."></textarea>
+          <button class="btn btn-secondary" id="btnImportJSON" style="margin-top: 10px;">Apply Imported Schema</button>
+        </div>
+
+        <div class="ff-card">
+          <h2 class="card-title" style="font-size: 1.35rem; margin-bottom: 8px;">System Diagnostics</h2>
+          <div class="meta-box" style="margin-top: 16px;">
+            <div class="meta-row"><span class="meta-lbl">Engine</span><span class="meta-val">FileFlow Client Core v2.4</span></div>
+            <div class="meta-row"><span class="meta-lbl">Storage Mode</span><span class="meta-val">Local In-Memory Virtual Store</span></div>
+            <div class="meta-row"><span class="meta-lbl">Protection</span><span class="meta-val" style="color:var(--success)">Path Traversal Guard Active</span></div>
+          </div>
+
+          <h3 class="card-title" style="font-size: 1.1rem; margin-top: 24px; margin-bottom: 8px;">Factory Reset</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Reverts the file directory to the original standard template.</p>
+          <button class="btn btn-secondary" id="btnFactoryReset" style="color: var(--danger); border-color: #FCA5A5;">Revert to Sample State</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: CREATE FOLDER -->
+  <div class="modal-overlay" id="modalCreateFolder">
+    <div class="modal-box">
+      <div class="modal-hdr">
+        <h3>Create New Folder</h3>
+        <button class="modal-close" onclick="closeModal('modalCreateFolder')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parent Folder</label>
+        <select id="cfParent" class="form-select"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Folder Name</label>
+        <input type="text" id="cfName" class="form-input" placeholder="e.g. Invoices, Reports, or Archive">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalCreateFolder')">Cancel</button>
+        <button class="btn btn-primary" id="cfSubmit">Create Folder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE FILE -->
+  <div class="modal-overlay" id="modalCreateFile">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-hdr">
+        <h3>Create New File</h3>
+        <button class="modal-close" onclick="closeModal('modalCreateFile')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Destination Folder</label>
+        <select id="cfileParent" class="form-select"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">File Template</label>
+        <select id="cfileTemplate" class="form-select">
+          <option value="txt">Text Document (.txt)</option>
+          <option value="md">Markdown Document (.md)</option>
+          <option value="py">Python Script (.py)</option>
+          <option value="json">JSON Configuration (.json)</option>
+          <option value="log">Log File (.log)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">File Name</label>
+        <input type="text" id="cfileName" class="form-input" placeholder="e.g. notes.txt">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Initial Content</label>
+        <textarea id="cfileContent" class="form-textarea" rows="5" placeholder="Enter file text content..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalCreateFile')">Cancel</button>
+        <button class="btn btn-primary" id="cfileSubmit">Create File</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT FILE -->
+  <div class="modal-overlay" id="modalEditFile">
+    <div class="modal-box" style="max-width: 650px;">
+      <div class="modal-hdr">
+        <h3>Edit File Content</h3>
+        <button class="modal-close" onclick="closeModal('modalEditFile')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" id="efPathLabel">File Path</label>
+        <textarea id="efContent" class="form-textarea" rows="10" style="font-family:'JetBrains Mono', monospace; font-size:0.85rem;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalEditFile')">Discard</button>
+        <button class="btn btn-primary" id="efSaveBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RENAME -->
+  <div class="modal-overlay" id="modalRename">
+    <div class="modal-box">
+      <div class="modal-hdr">
+        <h3>Rename Item</h3>
+        <button class="modal-close" onclick="closeModal('modalRename')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Name</label>
+        <input type="text" id="renameInput" class="form-input">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalRename')">Cancel</button>
+        <button class="btn btn-primary" id="renameSubmit">Save Name</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DELETE CONFIRM -->
+  <div class="modal-overlay" id="modalDelete">
+    <div class="modal-box">
+      <div class="modal-hdr">
+        <h3 style="color: var(--danger);">Move to Trash?</h3>
+        <button class="modal-close" onclick="closeModal('modalDelete')">✕</button>
+      </div>
+      <p id="deletePromptText" style="color: var(--text-muted); font-size: 0.90rem; margin-bottom: 20px;"></p>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalDelete')">Cancel</button>
+        <button class="btn btn-danger" id="deleteConfirmBtn">Move to Trash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toasts"></div>
+
+  <!-- APPLICATION CORE LOGIC -->
+  <script>
+    // System Database State
+    function nowStr() {
+      const d = new Date();
+      return d.getFullYear() + "-" +
+             String(d.getMonth() + 1).padStart(2, '0') + "-" +
+             String(d.getDate()).padStart(2, '0') + " " +
+             String(d.getHours()).padStart(2, '0') + ":" +
+             String(d.getMinutes()).padStart(2, '0');
+    }
+
+    const defaultDB = {
+      "/": { type: "folder", parent: null, created: nowStr(), updated: nowStr(), content: "", desc: "Root workspace" },
+      "/Documents": { type: "folder", parent: "/", created: nowStr(), updated: nowStr(), content: "", desc: "Company documents" },
+      "/Projects": { type: "folder", parent: "/", created: nowStr(), updated: nowStr(), content: "", desc: "Active project tasks" },
+      "/Images": { type: "folder", parent: "/", created: nowStr(), updated: nowStr(), content: "", desc: "Graphics and brand assets" },
+      "/Documents/Welcome.txt": { type: "file", parent: "/Documents", created: nowStr(), updated: nowStr(), content: "Welcome to FileFlow Enterprise Drive!\n\nThis platform simulates a real-world hierarchical file directory structure.\n- Create folders and multi-format files\n- Navigate with breadcrumbs and tree views\n- Inspect, edit, rename, and soft-delete files with trash recovery\n- Export complete directory schemas as JSON" },
+      "/Projects/ideas.txt": { type: "file", parent: "/Projects", created: nowStr(), updated: nowStr(), content: "FileFlow Strategic Roadmap 2026:\n1. Cloud storage provider synchronization\n2. Real-time multi-user document collaboration\n3. Zero-knowledge cryptographic file encryption\n4. Smart tag classification and semantic indexing" },
+      "/Projects/config.json": { type: "file", parent: "/Projects", created: nowStr(), updated: nowStr(), content: '{\n  "app": "FileFlow",\n  "environment": "production",\n  "version": "2.4.0",\n  "cloudStorageQuotaMB": 100,\n  "autoSync": true\n}' }
+    };
+
+    let db = JSON.parse(JSON.stringify(defaultDB));
+    let trash = {};
+    let currentFolder = "/";
+    let selectedItem = "/Documents/Welcome.txt";
+    let viewMode = "grid";
+    let activeView = "dashboard";
+    let targetActionItem = null;
+
+    // Helper functions
+    const $ = id => document.getElementById(id);
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+      return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    }
+
+    function getExt(name) {
+      if (name.includes(".") && !name.startsWith(".")) {
+        return name.split(".").pop().toLowerCase();
+      }
+      return "txt";
+    }
+
+    function getFileMeta(name) {
+      const ext = getExt(name);
+      if (["py", "js", "html", "css", "ts", "sh", "sql"].includes(ext)) {
+        return { label: "Code", cls: "badge-code", icon: "💻" };
+      }
+      if (["json", "xml", "csv", "yaml", "yml"].includes(ext)) {
+        return { label: "Data", cls: "badge-data", icon: "📊" };
+      }
+      if (["png", "jpg", "jpeg", "svg", "gif"].includes(ext)) {
+        return { label: "Media", cls: "badge-doc", icon: "🖼️" };
+      }
+      return { label: "Document", cls: "badge-doc", icon: "📄" };
+    }
+
+    function showToast(msg, type = "success") {
+      const t = document.createElement("div");
+      t.className = `toast ${type}`;
+      t.innerHTML = `<span>${type === 'success' ? '✓' : '⚠️'}</span> <div>${msg}</div>`;
+      $("toasts").appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = "0";
+        t.style.transform = "translateX(100%)";
+        setTimeout(() => t.remove(), 250);
+      }, 3000);
+    }
+
+    function getChildren(path) {
+      const all = Object.keys(db).filter(k => db[k].parent === path);
+      const folders = all.filter(k => db[k].type === "folder").sort();
+      const files = all.filter(k => db[k].type === "file").sort();
+      return [...folders, ...files];
+    }
+
+    function calculateStorage() {
+      let total = 0;
+      let breakdown = { "Documents": 0, "Code": 0, "Data": 0, "Media": 0, "Other": 0 };
+      Object.keys(db).forEach(k => {
+        if (db[k].type === "file") {
+          const b = new Blob([db[k].content || ""]).size;
+          total += b;
+          const meta = getFileMeta(k);
+          if (meta.label === "Document") breakdown["Documents"] += b;
+          else if (meta.label === "Code") breakdown["Code"] += b;
+          else if (meta.label === "Data") breakdown["Data"] += b;
+          else if (meta.label === "Media") breakdown["Media"] += b;
+          else breakdown["Other"] += b;
+        }
+      });
+      return { total, breakdown };
+    }
+
+    // Modal Control
+    function openModal(id) {
+      $(id).classList.add("open");
+    }
+    function closeModal(id) {
+      $(id).classList.remove("open");
+    }
+
+    // Tab / View Switcher
+    function switchView(viewName) {
+      activeView = viewName;
+      document.querySelectorAll(".nav-item").forEach(el => {
+        el.classList.toggle("active", el.dataset.view === viewName);
+      });
+      const views = ["dashboard", "explorer", "recent", "tree", "search", "trash", "settings"];
+      views.forEach(v => {
+        const el = $("view-" + v);
+        if (el) el.style.display = (v === viewName) ? "block" : "none";
+      });
+
+      if (window.innerWidth <= 768) {
+        $("sidebar").classList.remove("open");
+      }
+
+      renderAll();
+    }
+
+    document.querySelectorAll(".nav-item").forEach(el => {
+      el.addEventListener("click", () => switchView(el.dataset.view));
+    });
+
+    // View Mode Toggle (Grid / List)
+    function setViewMode(mode) {
+      viewMode = mode;
+      $("viewModeGrid").classList.toggle("active", mode === "grid");
+      $("viewModeList").classList.toggle("active", mode === "list");
+      renderExplorer();
+    }
+
+    // Mobile Menu Toggle
+    $("menuToggle").onclick = () => {
+      $("sidebar").classList.toggle("open");
+    };
+
+    // RENDER DASHBOARD
+    function renderDashboard() {
+      const folders = Object.keys(db).filter(k => db[k].type === "folder");
+      const files = Object.keys(db).filter(k => db[k].type === "file");
+      const { total, breakdown } = calculateStorage();
+
+      $("statFiles").textContent = files.length;
+      $("statFolders").textContent = folders.length - 1;
+      $("statStorage").textContent = formatBytes(total);
+
+      // Storage quota sidebar
+      $("storageUsedText").textContent = formatBytes(total);
+      const pct = Math.min(100, Math.max(1, (total / (100 * 1024 * 1024)) * 100));
+      $("storageProgressBar").style.width = pct + "%";
+
+      // Recent files table on dashboard
+      const sortedFiles = [...files].sort((a, b) => (db[b].updated || db[b].created).localeCompare(db[a].updated || db[a].created)).slice(0, 5);
+      if (sortedFiles.length === 0) {
+        $("dashRecentList").innerHTML = `<div class="empty-desc" style="text-align:center; padding:20px 0;">No files created yet.</div>`;
+      } else {
+        $("dashRecentList").innerHTML = sortedFiles.map(p => {
+          const item = db[p];
+          const name = p.split("/").pop();
+          const meta = getFileMeta(name);
+          const size = formatBytes(new Blob([item.content || ""]).size);
+          const parentName = item.parent === "/" ? "Root" : item.parent.split("/").pop();
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #EDF2F7;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:20px;">${meta.icon}</span>
+                <div>
+                  <div style="font-weight:700; font-size:0.90rem; color:var(--primary);">${name}</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">in ${parentName} · ${size}</div>
+                </div>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="badge ${meta.cls}">${meta.label}</span>
+                <button class="grid-btn-sm" onclick="openFileInExplorer('${p}')">Open</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // Storage breakdown
+      let distHtml = "";
+      Object.keys(breakdown).forEach(cat => {
+        const b = breakdown[cat];
+        const catPct = total > 0 ? (b / total * 100) : 0;
+        distHtml += `
+          <div style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.80rem; margin-bottom:4px;">
+              <span style="font-weight:600; color:var(--text);">${cat}</span>
+              <span style="font-weight:700; color:var(--primary);">${formatBytes(b)} (${catPct.toFixed(0)}%)</span>
+            </div>
+            <div style="height:6px; background:#EDF2F7; border-radius:10px; overflow:hidden;">
+              <div style="height:100%; width:${catPct}%; background:var(--secondary); border-radius:10px;"></div>
+            </div>
+          </div>
+        `;
+      });
+      $("storageDistributionList").innerHTML = distHtml;
+    }
+
+    // RENDER EXPLORER
+    function renderExplorer() {
+      // Breadcrumbs
+      const parts = currentFolder.split("/").filter(Boolean);
+      let bcHtml = `<span class="crumb-item ${currentFolder === '/' ? 'current' : ''}" onclick="goToFolder('/')">🏠 Root</span>`;
+      let accum = "";
+      parts.forEach((part, idx) => {
+        accum += "/" + part;
+        const isLast = idx === parts.length - 1;
+        bcHtml += `<span class="crumb-sep">›</span>`;
+        bcHtml += `<span class="crumb-item ${isLast ? 'current' : ''}" onclick="goToFolder('${accum}')">${part}</span>`;
+      });
+      $("breadcrumbBar").innerHTML = bcHtml;
+
+      $("currentDirName").textContent = currentFolder === "/" ? "Root Workspace" : currentFolder.split("/").pop();
+      $("currentDirPath").textContent = currentFolder;
+      $("btnGoUp").style.display = currentFolder === "/" ? "none" : "inline-flex";
+
+      const children = getChildren(currentFolder);
+      const folders = children.filter(p => db[p].type === "folder");
+      const files = children.filter(p => db[p].type === "file");
+
+      $("emptyDirState").style.display = (children.length === 0) ? "block" : "none";
+      $("foldersSection").style.display = (folders.length > 0) ? "block" : "none";
+      $("filesSection").style.display = (files.length > 0) ? "block" : "none";
+
+      if (viewMode === "grid") {
+        $("foldersContainer").className = "items-grid";
+        $("foldersContainer").innerHTML = folders.map(p => {
+          const name = p.split("/").pop();
+          const count = getChildren(p).length;
+          return `
+            <div class="grid-card ${selectedItem === p ? 'active' : ''}" onclick="selectItem('${p}')">
+              <div class="grid-card-top">
+                <span class="grid-card-icon">📁</span>
+                <span class="badge badge-folder">${count} items</span>
+              </div>
+              <div>
+                <div class="grid-card-name">${name}</div>
+                <div class="grid-card-sub">Folder</div>
+              </div>
+              <div class="grid-card-actions">
+                <button class="grid-btn-sm primary" onclick="event.stopPropagation(); goToFolder('${p}')">Open</button>
+                <button class="grid-btn-sm" onclick="event.stopPropagation(); promptRename('${p}')">✏️</button>
+                <button class="grid-btn-sm" onclick="event.stopPropagation(); promptDelete('${p}')">🗑️</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        $("filesContainer").className = "items-grid";
+        $("filesContainer").innerHTML = files.map(p => {
+          const item = db[p];
+          const name = p.split("/").pop();
+          const meta = getFileMeta(name);
+          const size = formatBytes(new Blob([item.content || ""]).size);
+          return `
+            <div class="grid-card ${selectedItem === p ? 'active' : ''}" onclick="selectItem('${p}')">
+              <div class="grid-card-top">
+                <span class="grid-card-icon">${meta.icon}</span>
+                <span class="badge ${meta.cls}">${getExt(name).toUpperCase()}</span>
+              </div>
+              <div>
+                <div class="grid-card-name">${name}</div>
+                <div class="grid-card-sub">${size}</div>
+              </div>
+              <div class="grid-card-actions">
+                <button class="grid-btn-sm" onclick="event.stopPropagation(); selectItem('${p}')">Inspect</button>
+                <button class="grid-btn-sm" onclick="event.stopPropagation(); promptRename('${p}')">✏️</button>
+                <button class="grid-btn-sm" onclick="event.stopPropagation(); promptDelete('${p}')">🗑️</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      } else {
+        // List Mode
+        $("foldersContainer").className = "items-list";
+        $("foldersContainer").innerHTML = folders.map(p => {
+          const name = p.split("/").pop();
+          const count = getChildren(p).length;
+          return `
+            <div class="list-row ${selectedItem === p ? 'active' : ''}" onclick="selectItem('${p}')">
+              <div class="list-col-name"><span style="font-size:20px;">📁</span> <span>${name}</span></div>
+              <div class="list-hide-mobile"><span class="badge badge-folder">Folder</span></div>
+              <div class="list-hide-mobile" style="font-size:0.80rem; color:var(--text-muted);">${count} items</div>
+              <div style="display:flex; gap:6px; justify-content:flex-end;">
+                <button class="grid-btn-sm primary" onclick="event.stopPropagation(); goToFolder('${p}')">Open</button>
+                <button class="grid-btn-sm" onclick="event.stopPropagation(); promptDelete('${p}')">🗑️</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        $("filesContainer").className = "items-list";
+        $("filesContainer").innerHTML = files.map(p => {
+          const item = db[p];
+          const name = p.split("/").pop();
+          const meta = getFileMeta(name);
+          const size = formatBytes(new Blob([item.content || ""]).size);
+          return `
+            <div class="list-row ${selectedItem === p ? 'active' : ''}" onclick="selectItem('${p}')">
+              <div class="list-col-name"><span style="font-size:20px;">${meta.icon}</span> <span>${name}</span></div>
+              <div class="list-hide-mobile"><span class="badge ${meta.cls}">${meta.label}</span></div>
+              <div class="list-hide-mobile" style="font-size:0.80rem; color:var(--text-muted);">${size}</div>
+              <div style="display:flex; gap:6px; justify-content:flex-end;">
+                <button class="grid-btn-sm" onclick="event.stopPropagation(); selectItem('${p}')">Inspect</button>
+                <button class="grid-btn-sm" onclick="event.stopPropagation(); promptDelete('${p}')">🗑️</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      renderInspector();
+    }
+
+    // INSPECTOR PANEL
+    function renderInspector() {
+      const panel = $("inspectorPanel");
+      if (!selectedItem || !db[selectedItem]) {
+        panel.innerHTML = `
+          <div class="empty-state" style="border:0; padding:24px 0;">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-title">No Item Selected</div>
+            <div class="empty-desc">Click on any file or folder to inspect properties and contents.</div>
+          </div>
+        `;
+        return;
+      }
+
+      const item = db[selectedItem];
+      const isFolder = item.type === "folder";
+      const name = selectedItem.split("/").pop() || "Root";
+      const meta = isFolder ? { label: "Folder", cls: "badge-folder", icon: "📁" } : getFileMeta(name);
+      const sizeStr = isFolder ? `${getChildren(selectedItem).length} items` : formatBytes(new Blob([item.content || ""]).size);
+
+      let contentHtml = "";
+      if (!isFolder) {
+        contentHtml = `
+          <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Content Preview</div>
+          <div class="code-editor-preview">${escapeHtml(item.content || "(empty file)")}</div>
+        `;
+      }
+
+      panel.innerHTML = `
+        <div class="inspector-top">
+          <span class="inspector-icon">${meta.icon}</span>
+          <div style="min-width:0; flex:1;">
+            <div class="inspector-title">${name}</div>
+            <span class="badge ${meta.cls}">${meta.label}</span>
+          </div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-row"><span class="meta-lbl">Path:</span><span class="meta-val">${selectedItem}</span></div>
+          <div class="meta-row"><span class="meta-lbl">Size:</span><span class="meta-val">${sizeStr}</span></div>
+          <div class="meta-row"><span class="meta-lbl">Parent:</span><span class="meta-val">${item.parent || "None"}</span></div>
+          <div class="meta-row"><span class="meta-lbl">Created:</span><span class="meta-val">${item.created || "—"}</span></div>
+          <div class="meta-row"><span class="meta-lbl">Modified:</span><span class="meta-val">${item.updated || "—"}</span></div>
+        </div>
+        ${contentHtml}
+        <div class="inspector-actions">
+          ${isFolder ?
+            `<button class="btn btn-primary" style="padding:8px;" onclick="goToFolder('${selectedItem}')">📂 Enter</button>` :
+            `<button class="btn btn-primary" style="padding:8px;" onclick="promptEditFile('${selectedItem}')">✏️ Edit</button>`
+          }
+          <button class="btn btn-secondary" style="padding:8px;" onclick="promptRename('${selectedItem}')">🏷️ Rename</button>
+          <button class="btn btn-danger" style="padding:8px;" onclick="promptDelete('${selectedItem}')">🗑️ Delete</button>
+        </div>
+      `;
+    }
+
+    function selectItem(p) {
+      selectedItem = p;
+      renderExplorer();
+    }
+
+    function goToFolder(p) {
+      if (db[p] && db[p].type === "folder") {
+        currentFolder = p;
+        selectedItem = p;
+        renderExplorer();
+      }
+    }
+
+    function openFileInExplorer(filePath) {
+      if (db[filePath]) {
+        currentFolder = db[filePath].parent || "/";
+        selectedItem = filePath;
+        switchView("explorer");
+      }
+    }
+
+    // RENDER RECENT VIEW
+    function renderRecent() {
+      const files = Object.keys(db).filter(k => db[k].type === "file");
+      const sorted = [...files].sort((a, b) => (db[b].updated || db[b].created).localeCompare(db[a].updated || db[a].created));
+
+      if (sorted.length === 0) {
+        $("recentFilesFullList").innerHTML = `<div class="empty-state" style="border:0;"><div class="empty-icon">📄</div><div class="empty-title">No Files Found</div></div>`;
+        return;
+      }
+
+      $("recentFilesFullList").innerHTML = sorted.map(p => {
+        const item = db[p];
+        const name = p.split("/").pop();
+        const meta = getFileMeta(name);
+        const size = formatBytes(new Blob([item.content || ""]).size);
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid #EDF2F7;">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <span style="font-size:26px;">${meta.icon}</span>
+              <div>
+                <div style="font-weight:700; font-size:0.98rem; color:var(--primary);">${name}</div>
+                <div style="font-size:0.80rem; color:var(--text-muted);">Path: <code>${p}</code> · ${size}</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span class="badge ${meta.cls}">${meta.label}</span>
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.82rem;" onclick="openFileInExplorer('${p}')">Open</button>
+              <button class="btn btn-primary" style="padding:6px 12px; font-size:0.82rem;" onclick="promptEditFile('${p}')">Edit</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // RENDER TREE
+    function renderTree() {
+      function buildBranch(path, depth = 0) {
+        const item = db[path];
+        const isFolder = item.type === "folder";
+        const name = path === "/" ? "Root ( / )" : path.split("/").pop();
+        const indent = depth * 22;
+
+        if (isFolder) {
+          const kids = getChildren(path);
+          return `
+            <div style="margin-left:${indent}px; margin-bottom:4px;">
+              <div style="display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:6px; cursor:pointer;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='transparent'">
+                <span style="font-size:18px;">📁</span>
+                <strong style="color:var(--primary); font-size:0.92rem;">${name}</strong>
+                <span class="badge badge-folder" style="font-size:0.70rem;">${kids.length} items</span>
+                <button class="grid-btn-sm" style="margin-left:auto;" onclick="event.stopPropagation(); currentFolder='${path}'; switchView('explorer');">Explore</button>
+              </div>
+              ${kids.map(k => buildBranch(k, depth + 1)).join("")}
+            </div>
+          `;
+        } else {
+          const meta = getFileMeta(name);
+          return `
+            <div style="margin-left:${indent}px; margin-bottom:4px; display:flex; align-items:center; gap:8px; padding:4px 10px; font-size:0.88rem; color:var(--text);" onmouseover="this.style.background='#F8FAFD'" onmouseout="this.style.background='transparent'">
+              <span>${meta.icon}</span>
+              <span>${name}</span>
+              <span class="badge ${meta.cls}" style="font-size:0.70rem;">${getExt(name).toUpperCase()}</span>
+              <span style="font-size:0.75rem; color:var(--text-muted); margin-left:auto;">${formatBytes(new Blob([item.content || '']).size)}</span>
+            </div>
+          `;
+        }
+      }
+
+      $("treeContainer").innerHTML = buildBranch("/");
+    }
+
+    // RENDER SEARCH
+    function renderSearch() {
+      const q = $("searchInput").value.trim().toLowerCase();
+      const filter = $("searchTypeFilter").value;
+      const resContainer = $("searchResultsContainer");
+
+      if (!q) {
+        resContainer.innerHTML = `
+          <div class="empty-state" style="border:0; padding:32px 0;">
+            <div class="empty-icon">🔎</div>
+            <div class="empty-title">Instant Workspace Search</div>
+            <div class="empty-desc">Type any file name, directory name, or keyword inside document contents.</div>
+          </div>
+        `;
+        return;
+      }
+
+      const results = [];
+      Object.keys(db).forEach(p => {
+        if (p === "/") return;
+        const item = db[p];
+        if (filter === "file" && item.type !== "file") return;
+        if (filter === "folder" && item.type !== "folder") return;
+
+        const name = p.split("/").pop();
+        const inName = name.toLowerCase().includes(q);
+        const inPath = p.toLowerCase().includes(q);
+        const inContent = (item.content || "").toLowerCase().includes(q);
+
+        if (inName || inPath || inContent) {
+          results.push({ path: p, item, inName, inPath, inContent });
+        }
+      });
+
+      if (results.length === 0) {
+        resContainer.innerHTML = `
+          <div class="empty-state" style="border:0; padding:32px 0;">
+            <div class="empty-icon">❌</div>
+            <div class="empty-title">No Matching Results</div>
+            <div class="empty-desc">No files or folders matched '${q}'. Try another keyword.</div>
+          </div>
+        `;
+        return;
+      }
+
+      resContainer.innerHTML = `
+        <div style="font-size:0.88rem; font-weight:700; color:var(--success); margin-bottom:14px;">✓ ${results.length} item(s) found</div>
+        ${results.map(r => {
+          const name = r.path.split("/").pop();
+          const meta = r.item.type === "folder" ? { label: "Folder", cls: "badge-folder", icon: "📁" } : getFileMeta(name);
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:#F8FAFD; border:1px solid var(--borders); border-radius:8px; margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:24px;">${meta.icon}</span>
+                <div>
+                  <div style="font-weight:700; font-size:0.95rem; color:var(--primary);">${name}</div>
+                  <div style="font-size:0.80rem; color:var(--text-muted);">${r.path}</div>
+                  <div style="margin-top:4px; display:flex; gap:6px;">
+                    ${r.inName ? '<span class="badge badge-code">Name Match</span>' : ''}
+                    ${r.inPath ? '<span class="badge badge-data">Path Match</span>' : ''}
+                    ${r.inContent ? '<span class="badge badge-doc">Content Match</span>' : ''}
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-secondary" onclick="openFileInExplorer('${r.path}')">Open in Explorer</button>
+            </div>
+          `;
+        }).join("")}
+      `;
+    }
+
+    $("searchInput").oninput = renderSearch;
+    $("searchTypeFilter").onchange = renderSearch;
+
+    // RENDER TRASH
+    function renderTrash() {
+      const keys = Object.keys(trash);
+      $("trashBadge").textContent = keys.length;
+      $("trashBadge").style.display = keys.length > 0 ? "inline-block" : "none";
+      $("btnEmptyTrash").style.display = keys.length > 0 ? "inline-flex" : "none";
+
+      if (keys.length === 0) {
+        $("trashContainer").innerHTML = `
+          <div class="empty-state" style="border:0;">
+            <div class="empty-icon">✨</div>
+            <div class="empty-title">Trash is Clean</div>
+            <div class="empty-desc">Deleted files or folders are preserved here for recovery.</div>
+          </div>
+        `;
+        return;
+      }
+
+      $("trashContainer").innerHTML = keys.map(p => {
+        const item = trash[p];
+        const name = p.split("/").pop();
+        const icon = item.type === "folder" ? "📁" : "📄";
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #EDF2F7;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="font-size:22px;">${icon}</span>
+              <div>
+                <strong style="color:var(--primary); font-size:0.95rem;">${name}</strong>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Path: <code>${p}</code> · Deleted: ${item.deleted_at || 'Recently'}</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-secondary" onclick="restoreItem('${p}')">↩ Restore</button>
+              <button class="btn btn-danger" style="padding:6px 12px; font-size:0.82rem;" onclick="permanentDelete('${p}')">Purge</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function restoreItem(path) {
+      const targets = Object.keys(trash).filter(p => p === path || p.startsWith(path + "/"));
+      targets.sort((a,b) => a.length - b.length).forEach(p => {
+        const entry = trash[p];
+        delete trash[p];
+        entry.updated = nowStr();
+        delete entry.deleted_at;
+        db[p] = entry;
+      });
+      showToast(`Restored '${path.split("/").pop()}'`);
+      renderAll();
+    }
+
+    function permanentDelete(path) {
+      const targets = Object.keys(trash).filter(p => p === path || p.startsWith(path + "/"));
+      targets.forEach(p => delete trash[p]);
+      showToast(`Permanently deleted '${path.split("/").pop()}'`);
+      renderAll();
+    }
+
+    $("btnEmptyTrash").onclick = () => {
+      if (confirm("Permanently delete all items in Trash? This cannot be undone.")) {
+        trash = {};
+        showToast("Trash emptied successfully");
+        renderAll();
+      }
+    };
+
+    // ACTION OPERATIONS: ADD, RENAME, DELETE, EDIT
+    function populateParentSelects() {
+      const folders = Object.keys(db).filter(k => db[k].type === "folder");
+      const opts = folders.map(f => `<option value="${f}">${f === "/" ? "Root ( / )" : f}</option>`).join("");
+      $("cfParent").innerHTML = opts;
+      $("cfileParent").innerHTML = opts;
+
+      if (folders.includes(currentFolder)) {
+        $("cfParent").value = currentFolder;
+        $("cfileParent").value = currentFolder;
+      }
+    }
+
+    // New Folder
+    function promptNewFolder(parentFolder = currentFolder) {
+      populateParentSelects();
+      if (parentFolder && db[parentFolder]) $("cfParent").value = parentFolder;
+      $("cfName").value = "";
+      openModal("modalCreateFolder");
+    }
+    $("sbNewFolderBtn").onclick = () => promptNewFolder();
+    $("btnExpNewFolder").onclick = () => promptNewFolder();
+
+    $("cfSubmit").onclick = () => {
+      const parent = $("cfParent").value;
+      const name = $("cfName").value.trim().replace(/^\/+|\/+$/g, "");
+      if (!name || name.includes("/") || name.includes("\\") || name === "." || name === "..") {
+        showToast("Please enter a valid folder name", "error");
+        return;
+      }
+      const newPath = (parent === "/" ? "" : parent) + "/" + name;
+      if (db[newPath]) {
+        showToast("An item with this name already exists", "error");
+        return;
+      }
+      db[newPath] = { type: "folder", parent, created: nowStr(), updated: nowStr(), content: "" };
+      closeModal("modalCreateFolder");
+      showToast(`Folder '${name}' created`);
+      goToFolder(parent);
+      renderAll();
+    };
+
+    // New File
+    function promptNewFile(parentFolder = currentFolder) {
+      populateParentSelects();
+      if (parentFolder && db[parentFolder]) $("cfileParent").value = parentFolder;
+      $("cfileName").value = "";
+      $("cfileContent").value = "Write your document text here...";
+      openModal("modalCreateFile");
+    }
+    $("sbNewFileBtn").onclick = () => promptNewFile();
+    $("btnExpNewFile").onclick = () => promptNewFile();
+
+    $("cfileSubmit").onclick = () => {
+      const parent = $("cfileParent").value;
+      let name = $("cfileName").value.trim().replace(/^\/+|\/+$/g, "");
+      const ext = $("cfileTemplate").value;
+      if (!name) {
+        showToast("Please provide a file name", "error");
+        return;
+      }
+      if (!name.includes(".")) name += "." + ext;
+      const newPath = (parent === "/" ? "" : parent) + "/" + name;
+      if (db[newPath]) {
+        showToast("An item with this name already exists", "error");
+        return;
+      }
+      db[newPath] = {
+        type: "file",
+        parent,
+        created: nowStr(),
+        updated: nowStr(),
+        content: $("cfileContent").value
+      };
+      closeModal("modalCreateFile");
+      showToast(`File '${name}' created`);
+      selectedItem = newPath;
+      goToFolder(parent);
+      renderAll();
+    };
+
+    // Rename
+    function promptRename(path) {
+      targetActionItem = path;
+      const name = path.split("/").pop();
+      $("renameInput").value = name;
+      openModal("modalRename");
+    }
+    $("renameSubmit").onclick = () => {
+      const newName = $("renameInput").value.trim().replace(/^\/+|\/+$/g, "");
+      if (!newName || newName.includes("/") || newName.includes("\\")) {
+        showToast("Enter a valid name without slashes", "error");
+        return;
+      }
+      const oldPath = targetActionItem;
+      const parent = db[oldPath].parent;
+      const newPath = (parent === "/" ? "" : parent) + "/" + newName;
+      if (db[newPath]) {
+        showToast("An item with this name already exists", "error");
+        return;
+      }
+
+      // Cascade rename for children
+      const targets = Object.keys(db).filter(k => k === oldPath || k.startsWith(oldPath + "/"));
+      const migrated = {};
+      targets.forEach(p => {
+        const suffix = p.slice(oldPath.length);
+        const up = newPath + suffix;
+        const entry = JSON.parse(JSON.stringify(db[p]));
+        entry.updated = nowStr();
+        if (p === oldPath) entry.parent = parent;
+        else entry.parent = newPath + entry.parent.slice(oldPath.length);
+        migrated[up] = entry;
+      });
+
+      targets.forEach(p => delete db[p]);
+      Object.assign(db, migrated);
+
+      if (currentFolder === oldPath || currentFolder.startsWith(oldPath + "/")) {
+        currentFolder = newPath + currentFolder.slice(oldPath.length);
+      }
+      if (selectedItem === oldPath || (selectedItem && selectedItem.startsWith(oldPath + "/"))) {
+        selectedItem = newPath + selectedItem.slice(oldPath.length);
+      }
+
+      closeModal("modalRename");
+      showToast(`Renamed to '${newName}'`);
+      renderAll();
+    };
+
+    // Delete (Soft delete to Trash)
+    function promptDelete(path) {
+      targetActionItem = path;
+      const name = path.split("/").pop();
+      const isFolder = db[path].type === "folder";
+      const descCount = Object.keys(db).filter(k => k.startsWith(path + "/")).length;
+      $("deletePromptText").innerHTML = `Are you sure you want to move <strong>${name}</strong> to Trash?` +
+        (isFolder && descCount > 0 ? `<br><span style="color:var(--danger)">Warning: Contains ${descCount} nested items that will also be moved.</span>` : "");
+      openModal("modalDelete");
+    }
+    $("deleteConfirmBtn").onclick = () => {
+      const path = targetActionItem;
+      const targets = Object.keys(db).filter(k => k === path || k.startsWith(path + "/"));
+      targets.sort((a,b) => b.length - a.length).forEach(p => {
+        const entry = db[p];
+        delete db[p];
+        entry.deleted_at = nowStr();
+        trash[p] = entry;
+      });
+
+      if (currentFolder === path || currentFolder.startsWith(path + "/")) {
+        currentFolder = "/";
+      }
+      if (selectedItem === path || (selectedItem && selectedItem.startsWith(path + "/"))) {
+        selectedItem = null;
+      }
+
+      closeModal("modalDelete");
+      showToast(`Moved ${targets.length} item(s) to Trash`);
+      renderAll();
+    };
+
+    // Edit File
+    function promptEditFile(path) {
+      targetActionItem = path;
+      $("efPathLabel").textContent = "Editing: " + path;
+      $("efContent").value = db[path].content || "";
+      openModal("modalEditFile");
+    }
+    $("efSaveBtn").onclick = () => {
+      if (targetActionItem && db[targetActionItem]) {
+        db[targetActionItem].content = $("efContent").value;
+        db[targetActionItem].updated = nowStr();
+        closeModal("modalEditFile");
+        showToast("File content saved");
+        renderAll();
+      }
+    };
+
+    // Export & Import
+    $("btnExportJSON").onclick = () => {
+      const payload = {
+        project: "FileFlow",
+        version: "2.4.0",
+        exportedAt: new Date().toISOString(),
+        items: db
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "fileflow_directory.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast("Directory JSON exported");
+    };
+
+    $("btnImportJSON").onclick = () => {
+      const txt = $("importJsonText").value.trim();
+      if (!txt) return;
+      try {
+        const parsed = JSON.parse(txt);
+        if (parsed.items && typeof parsed.items === "object") {
+          db = parsed.items;
+          showToast("Schema imported successfully");
+          currentFolder = "/";
+          selectedItem = null;
+          renderAll();
+        } else {
+          showToast("Invalid JSON schema: Missing 'items'", "error");
+        }
+      } catch (err) {
+        showToast("Failed to parse JSON: " + err.message, "error");
+      }
+    };
+
+    $("btnFactoryReset").onclick = () => {
+      if (confirm("Reset directory to default template?")) {
+        db = JSON.parse(JSON.stringify(defaultDB));
+        trash = {};
+        currentFolder = "/";
+        selectedItem = "/Documents/Welcome.txt";
+        showToast("System reset to sample state");
+        renderAll();
+      }
+    };
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderExplorer();
+      renderRecent();
+      renderTree();
+      renderTrash();
+      populateParentSelects();
+    }
+
+    // Initial load
+    renderAll();
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+FILEFLOW DEPLOYMENT GUIDE
+
+A) Website preview
+- Open index.html in a web browser. This is a standalone front-end preview/demo.
+- It stores demo data in memory only; refreshing the page resets the demo.
+
+B) Python app locally
+- Install Python 3.10+
+- Open terminal in this folder
+- Run: pip install -r requirements.txt
+- Run: streamlit run app.py
+
+C) Deploy Python app for a public URL
+- Create a GitHub repository you control.
+- Upload app.py, requirements.txt, README.md, and optionally index.html.
+- Visit https://share.streamlit.io and sign in with GitHub.
+- Click Create app, choose your repository, branch main, and main file app.py.
+- Click Deploy and copy the generated streamlit.app URL.
+
+IMPORTANT
+The HTML file is a front-end demo; the Python/Streamlit app is the deployable Python project. They are separate implementations and do not sync data with one another.
+A public URL cannot be generated until the app is deployed from your GitHub/Streamlit account.
